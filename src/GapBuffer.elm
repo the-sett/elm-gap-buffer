@@ -2,10 +2,9 @@ module GapBuffer exposing
     ( GapBuffer
     , empty, fromArray, fromList
     , get, isEmpty, length, slice, currentFocus
-    , getFocus, setFocus, insertAtFocus, updateFocus, focusAt
+    , getFocus, setFocus, insertAtFocus, updateFocus, focusAt, delete
     , RippleOutcome(..), ripple
     , foldlSlice, foldrSlice, indexedFoldl, indexedFoldr
-    , delete
     )
 
 {-| Implements an efficient buffer for text editing.
@@ -24,7 +23,7 @@ module GapBuffer exposing
 
 # Manipulate
 
-@docs getFocus, setFocus, insertAtFocus, updateFocus, focusAt
+@docs getFocus, setFocus, insertAtFocus, updateFocus, focusAt, delete
 
 
 # Rippling
@@ -41,6 +40,8 @@ module GapBuffer exposing
 import Array exposing (Array)
 
 
+{-| A GapBuffer model.
+-}
 type alias GapBuffer a b =
     { head : Array a
     , zip :
@@ -249,6 +250,12 @@ setFocus idx val buffer =
     { rezipped | zip = rezipped.zip |> Maybe.map (\zip -> { zip | val = val }) }
 
 
+{-| Inserts an entry at the specified index into the buffer. Entries at higher indexes will now have
+an index one higher than before.
+
+If the index is out of range for the buffer this operation will do nothing.
+
+-}
 insertAtFocus : Int -> b -> GapBuffer a b -> GapBuffer a b
 insertAtFocus idx val buffer =
     if idx < 0 || idx > buffer.length then
@@ -301,6 +308,11 @@ updateFocus idx fn buffer =
     { rezipped | zip = rezipped.zip |> Maybe.map (\zip -> { zip | val = fn zip.val }) }
 
 
+{-| Focusses the buffer at the specified index.
+
+If the index is out of range for the buffer this operation will do nothing.
+
+-}
 focusAt : Int -> GapBuffer a b -> GapBuffer a b
 focusAt idx buffer =
     if idx < 0 || idx >= buffer.length then
@@ -319,6 +331,12 @@ focusAt idx buffer =
                     rezip idx buffer
 
 
+{-| Deletes the specified index from the buffer. Entries at higher indexes will now have
+an index one less than before.
+
+If the index is out of range for the buffer this operation will do nothing.
+
+-}
 delete : Int -> GapBuffer a b -> GapBuffer a b
 delete idx buffer =
     case get idx buffer of
@@ -345,11 +363,30 @@ delete idx buffer =
 -- Rippling
 
 
+{-| The possible outcomes of ripple operations.
+
+A ripple is an operation which can complete all the way to the end of the buffer,
+or can be stopped when it reaches a certain point from which it can be continued.
+
+-}
 type RippleOutcome
     = Done
     | StoppedAt Int
 
 
+{-| Rippling runs the buffer focus between a 'from' index and a 'to' index. Each entry encountered is
+extracted from the buffer and re-merged into the buffer by passing it through its 'toFocus' and
+'fromFocus' functions.
+
+This can be used to apply an operation such as formatting the text correctly, but only within a window
+of the buffer. For example, in an editor working on 1 million lines, a change on an earlier line my
+change the formatting on later lines, but we only want to apply the formatting on lines that the user
+can currently see, or the operation will be too slow.
+
+Since we know where a ripply operation ended, it can be re-run from that point. Or ripple operations can
+be cancelled if they are overtaking by other ripple operations.
+
+-}
 ripple :
     Int
     -> Int
