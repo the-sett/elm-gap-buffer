@@ -250,8 +250,12 @@ setFocus idx val buffer =
     { rezipped | zip = rezipped.zip |> Maybe.map (\zip -> { zip | val = val }) }
 
 
-{-| Inserts an entry at the specified index into the buffer. Entries at higher indexes will now have
-an index one higher than before.
+{-| Inserts an entry at the specified index into the buffer.If the GapBuffer was already
+focussed at a different index, that index will be de-focussed, and the focus shifted to
+the specified index. Entries at higher indexes will now have an index one higher than before.
+
+Note that de-focussing and re-focussing the GapBuffer will use the toFocus and fromFocus
+functions that were specified when creating the buffer.
 
 If the index is out of range for the buffer this operation will do nothing.
 
@@ -308,7 +312,12 @@ updateFocus idx fn buffer =
     { rezipped | zip = rezipped.zip |> Maybe.map (\zip -> { zip | val = fn zip.val }) }
 
 
-{-| Focusses the buffer at the specified index.
+{-| Focusses the buffer at the specified index. If the GapBuffer was already focussed at
+a different index, that index will be de-focussed, and the focus shifted to the specified
+index.
+
+Note that de-focussing and re-focussing the GapBuffer will use the toFocus and fromFocus
+functions that were specified when creating the buffer.
 
 If the index is out of range for the buffer this operation will do nothing.
 
@@ -331,8 +340,12 @@ focusAt idx buffer =
                     rezip idx buffer
 
 
-{-| Deletes the specified index from the buffer. Entries at higher indexes will now have
-an index one less than before.
+{-| Deletes the specified index from the buffer. If the GapBuffer was already focussed at
+a different index, that index will be de-focussed, and the focus shifted to the specified
+index. Entries at higher indexes will now have an index one less than before.
+
+Note that de-focussing and re-focussing the GapBuffer will use the toFocus and fromFocus
+functions that were specified when creating the buffer.
 
 If the index is out of range for the buffer this operation will do nothing.
 
