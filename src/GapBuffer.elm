@@ -319,13 +319,18 @@ index.
 Note that de-focussing and re-focussing the GapBuffer will use the toFocus and fromFocus
 functions that were specified when creating the buffer.
 
-If the index is out of range for the buffer this operation will do nothing.
+If the index is out of range for the buffer this operation clamp the index to the available
+range. Negative values will set the focus to zero. Values greater than the buffer length will
+be off the end of the buffer, so no focus will be set.
 
 -}
 focusAt : Int -> GapBuffer a b -> GapBuffer a b
 focusAt idx buffer =
-    if idx < 0 || idx >= buffer.length then
-        buffer
+    if idx < 0 then
+        rezip 0 buffer
+
+    else if idx >= buffer.length then
+        rezip buffer.length buffer
 
     else
         case buffer.zip of
