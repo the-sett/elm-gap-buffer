@@ -3,6 +3,7 @@ module GapBuffer exposing
     , empty, fromArray, fromList
     , get, isEmpty, length, slice, currentFocus
     , getFocus, setFocus, insertAtFocus, updateFocus, focusAt, delete
+    , advanceFocus
     , RippleOutcome(..), ripple
     , foldlSlice, foldrSlice, indexedFoldl, indexedFoldr
     )
@@ -24,6 +25,7 @@ module GapBuffer exposing
 # Manipulate
 
 @docs getFocus, setFocus, insertAtFocus, updateFocus, focusAt, delete
+@docs advanceFocus
 
 
 # Rippling
@@ -375,6 +377,37 @@ delete idx buffer =
                             )
                 , length = buffer.length - 1
             }
+
+
+{-| Advances the focus by 1. If there is no focus becuase it fell off the end
+this returns nothing.
+
+A function is supplied that can optionally map the entry at the current focus
+into a new entry. If this mapping returns Nothing, then the focus is advanced.
+If this mapping returns a value, the focus is not advanced and the new entry
+replaces the one at the current focus. This feature can be used to stack
+`advanceFocus` functions together over `GapBuffers` of `GapBuffers` of ...
+
+-}
+advanceFocus : (b -> Maybe b) -> GapBuffer a b -> Maybe (GapBuffer a b)
+advanceFocus nextFn buffer =
+    let
+        focus =
+            currentFocus buffer
+    in
+    case focus of
+        Nothing ->
+            Nothing
+
+        Just ( idx, innerElement ) ->
+            case nextFn innerElement of
+                Nothing ->
+                    focusAt (idx + 1) buffer
+                        |> Just
+
+                Just replacementInnerElement ->
+                    setFocus idx replacementInnerElement buffer
+                        |> Just
 
 
 
