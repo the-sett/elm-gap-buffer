@@ -3,7 +3,7 @@
     "name": "the-sett/elm-gap-buffer",
     "summary": "An efficient gap buffer implementation for Elm base around slicing Array.",
     "license": "BSD-3-Clause",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "exposed-modules": [
         "GapBuffer"
     ],
